@@ -6,6 +6,7 @@ var readline = require('readline');
 var turf = require('turf');
 var cover = require('tile-cover');
 var async = require('async');
+var newNodes = [];
 
 var overpass = "http://overpass-api.de/api/interpreter?data=";
 
@@ -19,15 +20,17 @@ if (argv.help) console.log('index.js --input file.csv --x col-name --y col-name'
 if (!argv.input) throw new Error('--input argument required');
 if (!argv.lat) throw new Error('--x argument required');
 if (!argv.lon) throw new Error('--y argument required');
+if (!argv.signals && !argv.stops) throw new Error("[--signals|--stops] required");
 
-var tol = argv.tol ? argv.tol : 50;
+var tol = argv.tol ? argv.tol : 0.100; //In km
 var tag = argv.signals ? { key: "highway", value: "traffic_signals" } : { key: "highway", value: "stop" };
 var head = true;
 var fileInput = fs.createReadStream(argv.input);
 var fileOutput = fs.createWriteStream('./out.csv');
 var lon, lat,
-    collection = [];
+    collection = [],
     osmcollection = [];
+var fc, osmfc;
 
 var rl = readline.createInterface({
     input: fileInput, 
@@ -64,12 +67,26 @@ function getOSM() {
         var bbox = turf.extent(feat);
         var query = overpass + encodeURIComponent("[out:json][timeout:25];(node[" + tag.key +  "=" + tag.value + "]("+bbox[1]+","+bbox[0]+","+bbox[3]+","+bbox[2]+"););out body;>;out skel qt;");
         request(query, function(err, res, body) {
-            if (err || res.statusCode !== 200) cb(new Error("Overpass Query Failed!"));
-            JSON.parse(body).elements.forEach(function(feat) {
-                osmcollection.push(turf.point(feat.lon, feat.lat));
+            if (err || res.statusCode !== 200) cb(new Error("Overpass Query Failed!\n" + body));
+            JSON.parse(body).elements.forEach(function(osmfeat) {
+                osmcollection.push(turf.point(osmfeat.lon, osmfeat.lat));
             }); 
+            setTimeout(cb, 1000); //Respect Overpass limits
         });
     }, function(err) {
         if (err) throw err;
+        else diff();
     });
+}
+
+function diff() {
+    osmfc = turf.featurecollection(osmcollection);
+
+    fc.features.forEach(function(pt) {
+        var nearest = turf.nearest(pt, osmfc);
+        if (turf.distance(pt, nearest, "kilometers") > tol) {
+            newNodes.push(nearest);
+        }
+    });
+    console.log(JSON.stringify(turf.featurecollection(newNodes)));
 }
