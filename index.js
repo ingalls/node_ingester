@@ -12,7 +12,7 @@ var argv = require('minimist')(process.argv, {
     'boolean': ['--signals', '--stops']
 });
 
-if (!argv.help) console.log('index.js --input file.csv --x col-name --y col-name');
+if (argv.help) console.log('index.js --input file.csv --x col-name --y col-name');
 if (!argv.input) throw new Error('--input argument required');
 if (!argv.lat) throw new Error('--x argument required');
 if (!argv.lon) throw new Error('--y argument required');
@@ -46,5 +46,5 @@ rl.on('close', function () {
     fc = turf.featurecollection(collection);
     envelope = turf.envelope(fc);
     tiles = cover.geojson(envelope.geometry, { min_zoom: 6, max_zoom: 6 });
-
+    console.log(tiles.features.length);
 });
