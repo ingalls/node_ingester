@@ -64,14 +64,12 @@ function getOSM() {
         var bbox = turf.extent(feat);
         var query = overpass + encodeURIComponent("[out:json][timeout:25];(node[" + tag.key +  "=" + tag.value + "]("+bbox[1]+","+bbox[0]+","+bbox[3]+","+bbox[2]+"););out body;>;out skel qt;");
         request(query, function(err, res, body) {
-            console.log(bbox)
             if (err || res.statusCode !== 200) cb(new Error("Overpass Query Failed!"));
-            body.elements.forEach(function(feat) {
+            JSON.parse(body).elements.forEach(function(feat) {
                 osmcollection.push(turf.point(feat.lon, feat.lat));
             }); 
         });
     }, function(err) {
         if (err) throw err;
-        console.log(osmcollection);
     });
 }
