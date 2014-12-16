@@ -52,12 +52,11 @@ function getOSM() {
     
     fc = turf.featurecollection(collection);
     envelope = turf.envelope(fc);
-    tiles = cover.geojson(envelope.geometry, { min_zoom: 6, max_zoom: 6 }); 
+    tiles = cover.geojson(envelope.geometry, { min_zoom: 7, max_zoom: 7 }); 
     console.log(tiles.features.length);
 
     tiles.features.forEach(function(feat) {
         var bbox = turf.extent(feat);
-        var query = overpass + encodeURIComponent("[out:json][timeout:25];(node[" + tag.key +  "=" + tag.value + "](" + bbox + "););out body;>;out skel qt;");
-        console.log(query);
+        var query = overpass + encodeURIComponent("[out:json][timeout:25];(node[" + tag.key +  "=" + tag.value + "]("+bbox[1]+","+bbox[0]+","+bbox[3]+","+bbox[2]+"););out body;>;out skel qt;");
     });
 }
