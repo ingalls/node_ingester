@@ -1,0 +1,25 @@
+{
+  "name": "node_ingester",
+  "version": "0.0.1",
+  "description": "Ingest a given node type and compare a dataset against OSM",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ingalls/node_ingester.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ingalls/node_ingester/issues"
+  },
+  "homepage": "https://github.com/ingalls/node_ingester",
+  "dependencies": {
+    "minimist": "^1.1.0",
+    "request": "^2.51.0",
+    "tile-cover": "^2.4.0",
+    "turf": "^1.2.1"
+  }
+}
