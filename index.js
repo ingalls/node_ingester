@@ -5,6 +5,7 @@ var parseArgs = require('minimist');
 var readline = require('readline');
 var turf = require('turf');
 var cover = require('tile-cover');
+var async = require('async');
 
 var overpass = "http://overpass-api.de/api/interpreter?data=";
 
@@ -24,7 +25,9 @@ var tag = argv.signals ? { key: "highway", value: "traffic_signals" } : { key: "
 var head = true;
 var fileInput = fs.createReadStream(argv.input);
 var fileOutput = fs.createWriteStream('./out.csv');
-var lon, lat, collection = [];
+var lon, lat,
+    collection = [];
+    osmcollection = [];
 
 var rl = readline.createInterface({
     input: fileInput, 
@@ -40,7 +43,11 @@ rl.on('line', function (line) {
         if (!lat || !lon) throw new Error('Could not determine lat/lon cols');
         head = !head;
     } else {
-        collection.push(turf.point(line.split(',')[lon], line.split(',')[lat]));
+        var lonRow = parseFloat(line.split(',')[lon]),
+            latRow = parseFloat(line.split(',')[lat]);
+        if (lonRow > -180 || lonRow < 180 || latRow > -85 || latRow < 85 || (lonRow !== 0 && latRow !== 0)) 
+            collection.push(turf.point(lonRow, latRow));
+        else console.log("Invalid GEOM skipped");
     } 
 });
 
@@ -48,15 +55,23 @@ rl.on('close', getOSM);
 
 var query = "[out:json][timeout:25];(node[" + tag.key +  "=" + tag.value + "]({{bbox}}););out body;>;out skel qt;"
 
-function getOSM() {
-    
+function getOSM() { 
     fc = turf.featurecollection(collection);
     envelope = turf.envelope(fc);
     tiles = cover.geojson(envelope.geometry, { min_zoom: 7, max_zoom: 7 }); 
-    console.log(tiles.features.length);
-
-    tiles.features.forEach(function(feat) {
+    var queries = [];
+    async.each(tiles.features, function(feat, cb) {
         var bbox = turf.extent(feat);
         var query = overpass + encodeURIComponent("[out:json][timeout:25];(node[" + tag.key +  "=" + tag.value + "]("+bbox[1]+","+bbox[0]+","+bbox[3]+","+bbox[2]+"););out body;>;out skel qt;");
+        request(query, function(err, res, body) {
+            console.log(bbox)
+            if (err || res.statusCode !== 200) cb(new Error("Overpass Query Failed!"));
+            body.elements.forEach(function(feat) {
+                osmcollection.push(turf.point(feat.lon, feat.lat));
+            }); 
+        });
+    }, function(err) {
+        if (err) throw err;
+        console.log(osmcollection);
     });
 }
