@@ -1,4 +1,6 @@
-node_ingester
+Node Ingester
 =============
 
-Ingest a given node type and compare a dataset against OSM
+Ingests Traffic Signals and Stop Signs and compare them against OSM data
+
+
