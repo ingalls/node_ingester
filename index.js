@@ -1,31 +1,25 @@
 #!/usr/bin/env node
 var argv = require('minimist')(process.argv, {
-    'string': ['input', 'lat', 'lon', 'help'],
+    'string': ['input', 'lat', 'lon', 'help', 'tag'],
     'integer': ['tol'],
-    'boolean': ['--signals', '--stops']
 });
-
-if (argv.help) {
-    console.log('index.js --input file.csv --lat col-name --lon col-name (--signals|--stops)');
+if (argv.help || !argv.input || !argv.lat || !argv.lon || !argv.tag) {
+    console.log('./index.js --input FILE.csv --lat COL --lon COL --tag KEY:VALUE');
     process.exit();
-} else if (!argv.input) throw new Error('--input argument required');
-else if (!argv.lat) throw new Error('--x argument required');
-else if (!argv.lon) throw new Error('--y argument required');
-else if (!argv.signals && !argv.stops) throw new Error("[--signals|--stops] required");
+}
 
-var request = require('request');
-var fs = require('fs');
-var readline = require('readline');
-var turf = require('turf');
-var cover = require('tile-cover');
-var async = require('async');
-var newNodes = [];
-var stream = require('stream');
+var request = require('request'),
+    fs = require('fs'),
+    readline = require('readline'),
+    turf = require('turf'),
+    cover = require('tile-cover'),
+    async = require('async'),
+    stream = require('stream');
 
 var overpass = "http://overpass-api.de/api/interpreter?data=";
 
 var tol = argv.tol ? argv.tol : 0.100; //In km
-var tag = argv.signals ? { key: "highway", value: "traffic_signals" } : { key: "highway", value: "stop" };
+var tag =  { key: argv.tag.split(':')[0], value: argv.tag.split(':')[1]};
 var head = true;
 var fileInput = fs.createReadStream(argv.input);
 var lon, lat,
@@ -82,16 +76,10 @@ function getOSM() {
 
 function diff() {
     osmfc = turf.featurecollection(osmcollection);
-
+    console.log("LON,LAT"); 
     fc.features.forEach(function(pt) {
         var nearest = turf.nearest(pt, osmfc);
-        if (turf.distance(pt, nearest, "kilometers") > tol) {
-            newNodes.push(pt);
-        }
-    });
-   
-    console.log("LON,LAT"); 
-    newNodes.forEach(function(newNode) {
-        console.log(newNode.geometry.coordinates.join(','));
+        if (turf.distance(pt, nearest, "kilometers") > tol)
+            console.log(pt.geometry.coordinates.join(','));
     });
 }
