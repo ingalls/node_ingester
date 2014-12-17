@@ -4,7 +4,8 @@ var argv = require('minimist')(process.argv, {
     'integer': ['tol'],
     'boolean': ['--signals', '--stops']
 });
-if (argv._.length=2 || argv.help) {
+
+if (argv.help) {
     console.log('index.js --input file.csv --lat col-name --lon col-name (--signals|--stops)');
     process.exit();
 } else if (!argv.input) throw new Error('--input argument required');
@@ -19,6 +20,7 @@ var turf = require('turf');
 var cover = require('tile-cover');
 var async = require('async');
 var newNodes = [];
+var stream = require('stream');
 
 var overpass = "http://overpass-api.de/api/interpreter?data=";
 
@@ -26,7 +28,6 @@ var tol = argv.tol ? argv.tol : 0.100; //In km
 var tag = argv.signals ? { key: "highway", value: "traffic_signals" } : { key: "highway", value: "stop" };
 var head = true;
 var fileInput = fs.createReadStream(argv.input);
-var fileOutput = fs.createWriteStream('./out.csv');
 var lon, lat,
     collection = [],
     osmcollection = [];
@@ -34,7 +35,7 @@ var fc, osmfc;
 
 var rl = readline.createInterface({
     input: fileInput, 
-    output: fileOutput
+    output: new stream()
 });
 
 rl.on('line', function (line) {
@@ -85,8 +86,12 @@ function diff() {
     fc.features.forEach(function(pt) {
         var nearest = turf.nearest(pt, osmfc);
         if (turf.distance(pt, nearest, "kilometers") > tol) {
-            newNodes.push(nearest);
+            newNodes.push(pt);
         }
     });
-    console.log(JSON.stringify(turf.featurecollection(newNodes)));
+   
+    console.log("LON,LAT"); 
+    newNodes.forEach(function(newNode) {
+        console.log(newNode.geometry.coordinates.join(','));
+    });
 }
