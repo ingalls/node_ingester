@@ -1,7 +1,19 @@
 #!/usr/bin/env node
+var argv = require('minimist')(process.argv, {
+    'string': ['input', 'lat', 'lon', 'help'],
+    'integer': ['tol'],
+    'boolean': ['--signals', '--stops']
+});
+if (argv._.length=2 || argv.help) {
+    console.log('index.js --input file.csv --lat col-name --lon col-name (--signals|--stops)');
+    process.exit();
+} else if (!argv.input) throw new Error('--input argument required');
+else if (!argv.lat) throw new Error('--x argument required');
+else if (!argv.lon) throw new Error('--y argument required');
+else if (!argv.signals && !argv.stops) throw new Error("[--signals|--stops] required");
+
 var request = require('request');
 var fs = require('fs');
-var parseArgs = require('minimist');
 var readline = require('readline');
 var turf = require('turf');
 var cover = require('tile-cover');
@@ -9,18 +21,6 @@ var async = require('async');
 var newNodes = [];
 
 var overpass = "http://overpass-api.de/api/interpreter?data=";
-
-var argv = require('minimist')(process.argv, {
-    'string': ['input', 'lat', 'lon', 'help'],
-    'integer': ['tol'],
-    'boolean': ['--signals', '--stops']
-});
-
-if (argv.help) console.log('index.js --input file.csv --x col-name --y col-name');
-if (!argv.input) throw new Error('--input argument required');
-if (!argv.lat) throw new Error('--x argument required');
-if (!argv.lon) throw new Error('--y argument required');
-if (!argv.signals && !argv.stops) throw new Error("[--signals|--stops] required");
 
 var tol = argv.tol ? argv.tol : 0.100; //In km
 var tag = argv.signals ? { key: "highway", value: "traffic_signals" } : { key: "highway", value: "stop" };
