@@ -1,0 +1,11 @@
+{
+    "input": "https://www.dropbox.com/s/krumdi4rcxtr1kg/us-va-signals-2014.csv?dl=1",
+    "lat": "YCOORD",
+    "lon": "XCOORD",
+    "tag": "highway:traffic_signals",
+    "note": {
+        "date": "2014-12-17",
+        "source": "FOIA",
+        "provider": "KYDOT"
+    }
+}

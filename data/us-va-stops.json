@@ -1,0 +1,11 @@
+{
+    "input": "https://www.dropbox.com/s/mz9hupudel5byaf/us-va-stops-2014.csv?dl=1",
+    "lat": "LAT",
+    "lon": "LON",
+    "tag": "highway:stops",
+    "note": {
+        "date": "2014-12-17",
+        "source": "FOIA",
+        "provider": "KYDOT"
+    }
+}

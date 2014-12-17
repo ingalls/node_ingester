@@ -1,0 +1,11 @@
+{
+    "input": "https://www.dropbox.com/s/r6idbc9x1hvqy9l/us-ky-stops-2014.csv?dl=1",
+    "lat": "YCOORD",
+    "lon": "XCOORD",
+    "tag": "highway:stops",
+    "note": {
+        "date": "2014-12-17",
+        "source": "FOIA",
+        "provider": "VDOT"
+    }
+}

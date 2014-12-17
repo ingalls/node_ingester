@@ -1,0 +1,11 @@
+{
+    "input": "https://www.dropbox.com/s/p83v6hc4i9xg7sc/ca-on-toronto-signals-2014.csv?dl=1",
+    "lat": "latitude",
+    "lon": "longitude",
+    "tag": "highway:traffic_signals",
+    "note": {
+        "date": "2014-12-17",
+        "source": "http://www1.toronto.ca/wps/portal/contentonly?vgnextoid=965b868b5535b210VgnVCM1000003dd60f89RCRD",
+        "provider": "City of Toronto"
+    }
+}
