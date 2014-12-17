@@ -91,7 +91,7 @@ function getOSM() {
             JSON.parse(body).elements.forEach(function(osmfeat) {
                 osmcollection.push(turf.point(osmfeat.lon, osmfeat.lat));
             });
-            setTimeout(cb, 1000); //Respect Overpass limits
+            setTimeout(cb, 5000); //Respect Overpass limits
         });
     }, function(err) {
         if (err) throw err;
