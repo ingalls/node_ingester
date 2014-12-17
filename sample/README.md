@@ -15,5 +15,4 @@ va-signals-2014    | us-va    | KYDOT    | 2014 | FOIA     | Only covers KYDOT m
 FileName           | Coverage | Provider | Date | Obtained | Notes
 ------------------ | -------- | -------- | ---- | -------- | -----
 ky-stops-2014      | us-ky    | VDOT     | 2014 | FOIA     | Only covers VDOT maintained roads (major roads)
-
-
+va-stops-2014      | us-va    | KYDOT    | 2014 | FOIA     | Only covers KYDOR maintained roads (major roads)
