@@ -1,0 +1,11 @@
+{
+    "input": "https://www.dropbox.com/s/xe2kdwsa6yu74o4/us-mi-kansas_city-signals.csv?dl=1",
+    "lat": "lat",
+    "lon": "lon",
+    "tag": "highway:traffic_signals",
+    "note": {
+        "date": "2014-12-17",
+        "source": "https://data.kcmo.org/Traffic/Traffic-Counts-at-Signals/s7kw-x59n",
+        "provider": "City of Kansas City"
+    }
+}
