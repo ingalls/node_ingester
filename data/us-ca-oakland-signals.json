@@ -1,0 +1,11 @@
+{
+    "input": "https://www.dropbox.com/s/dm8ylzei29rda7z/us-ca-oakland-signals.csv?dl=1",
+    "lat": "YCOORD",
+    "lon": "XCOORD",
+    "tag": "highway:traffic_signals",
+    "note": {
+        "date": "2014-12-17",
+        "source": "https://data.oaklandnet.com/dataset/Traffic-Signals/v2dk-7tzs",
+        "provider": "City of Oakland"
+    }
+}
