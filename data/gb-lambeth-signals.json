@@ -1,0 +1,11 @@
+{
+    "input": "https://www.dropbox.com/s/n0kmgocxq5i74c3/gb-lambeth-signals.csv?dl=1",
+    "lat": "YCOORD",
+    "lon": "XCOORD",
+    "tag": "highway:traffic_signals",
+    "note": {
+        "date": "2014-12-17",
+        "source": "http://lambeth.gov.uk/open-data/a-road-traffic-signals",
+        "provider": "City of Lambeth"
+    }
+}
