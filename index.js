@@ -10,8 +10,8 @@ if (argv._.length === 3) {
     input = require(argv._[2]);
     input.tol = argv.tol ? argv.tol : 0.100;
 } else if (argv.help || !argv.input || !argv.lat || !argv.lon || !argv.tag) {
-    console.log('./index.js --input CSV|HTTP --lat COL --lon COL --tag KEY:VALUE [--tol TOL]');
-    console.log('./index.js JSON [--tol TOL]');
+    console.error('./index.js --input CSV|HTTP --lat COL --lon COL --tag KEY:VALUE [--tol TOL]');
+    console.error('./index.js JSON [--tol TOL]');
     process.exit();
 } else {
     input = {
@@ -29,17 +29,19 @@ var request = require('request'),
     turf = require('turf'),
     cover = require('tile-cover'),
     async = require('async'),
-    stream = require('stream');
+    stream = require('stream'),
+    forEachAsync = require('foreachasync').forEachAsync;
 
 var tag =  { key: input.tag.split(':')[0], value: input.tag.split(':')[1]};
 var overpass = "http://overpass-api.de/api/interpreter?data=";
-var query = "[out:json][timeout:25];(node[" + tag.key +  "=" + tag.value + "]({{bbox}}););out body;>;out skel qt;";
 
 var collection = [],
-    osmcollection = [];
+    osmcollection = [],
+    status = {};
 var fc, osmfc;
 
 if (input.input.indexOf('http') !== -1) {
+    console.error('Downloading data');
     var output = fs.createWriteStream('/tmp/ingester.csv');
     request(input.input).pipe(output);
     output.on('close', function () {
@@ -70,33 +72,51 @@ function getData() {
             var lonRow = parseFloat(line.split(',')[lon]),
                 latRow = parseFloat(line.split(',')[lat]);
             if (lonRow > -180 || lonRow < 180 || latRow > -85 || latRow < 85 || (lonRow !== 0 && latRow !== 0))
-                collection.push(turf.point(lonRow, latRow));
-            else console.log("Invalid GEOM skipped");
+                collection.push(turf.point([lonRow, latRow]));
+            else console.error("Invalid GEOM skipped");
         }
     });
-
     rl.on('close', getOSM);
 }
 
 function getOSM() {
     fc = turf.featurecollection(collection);
     envelope = turf.envelope(fc);
-    tiles = cover.geojson(envelope.geometry, { min_zoom: 7, max_zoom: 7 });
-    var queries = [];
+    console.error('Creating tiles');
+    var tiles = cover.geojson(envelope.geometry, { min_zoom: 7, max_zoom: 7 });
+    var urls = []
+
     async.each(tiles.features, function(feat, cb) {
         var bbox = turf.extent(feat);
-        var query = overpass + encodeURIComponent("[out:json][timeout:25];(node[" + tag.key +  "=" + tag.value + "]("+bbox[1]+","+bbox[0]+","+bbox[3]+","+bbox[2]+"););out body;>;out skel qt;");
-        request(query, function(err, res, body) {
-            if (err || res.statusCode !== 200) cb(new Error("Overpass Query Failed!\n" + body));
-            JSON.parse(body).elements.forEach(function(osmfeat) {
-                osmcollection.push(turf.point(osmfeat.lon, osmfeat.lat));
-            });
-            setTimeout(cb, 5000); //Respect Overpass limits
+        var query = overpass + encodeURIComponent("[out:json][timeout:10];(node[" + tag.key +  "=" + tag.value + "]("+bbox[1]+","+bbox[0]+","+bbox[3]+","+bbox[2]+"););out body;>;out skel qt;");
+        urls.push(query);
+    })
+    console.error('Number of requests: ' + urls.length);
+    
+    function issueRequest(address, next) {
+        console.error('issuing request for ' + address);
+        request(address, function(err, res, body) {
+            if (err || res.statusCode !== 200) {
+                console.log(body);
+                console.error('Request failed...retrying');
+                attempts++
+                if (attempts < 6) { issueRequest() }
+                else { next() }
+            } else {
+                console.error('request returned');
+                JSON.parse(body).elements.forEach(function(osmfeat) {
+                    osmcollection.push(turf.point([osmfeat.lon, osmfeat.lat]));
+                })
+                attempts = 0;
+                next()
+            };
         });
-    }, function(err) {
-        if (err) throw err;
-        else diff();
-    });
+    }
+    var q = require('queue-async')(1);
+    var tasks = [];
+    urls.forEach(function(t){ q.defer(issueRequest, t) });
+    q.await(diff);
+
 }
 
 function diff() {
