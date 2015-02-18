@@ -1,0 +1,10 @@
+{
+	"input": "https://www.dropbox.com/s/hjzykxk4fkb2vd7/2002_ga_intersection_signal_data.csv?dl=1",
+	"lat": "Y_LAT",
+	"lon": "X_LONG",
+	"tag": "highway:traffic_signals",
+	"note": {
+		"date": "2014-02-11",
+		"provider": "Georgia Department of Transportation FOIA request"
+	}
+}
