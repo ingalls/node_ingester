@@ -29,8 +29,7 @@ var request = require('request'),
     turf = require('turf'),
     cover = require('tile-cover'),
     async = require('async'),
-    stream = require('stream'),
-    forEachAsync = require('foreachasync').forEachAsync;
+    stream = require('stream');
 
 var tag =  { key: input.tag.split(':')[0], value: input.tag.split(':')[1]};
 var overpass = "http://overpass-api.de/api/interpreter?data=";
