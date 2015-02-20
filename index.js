@@ -15,11 +15,11 @@ if (argv._.length === 3) {
     process.exit();
 } else {
     input = {
-        "lon": argv.lon,
-        "lat": argv.lat,
-        "input": argv.input,
-        "tag": argv.tag,
-        "tol": argv.tol ? argv.tol : 0.100
+        'lon': argv.lon,
+        'lat': argv.lat,
+        'input': argv.input,
+        'tag': argv.tag,
+        'tol': argv.tol ? argv.tol : 0.100
     };
 }
 
@@ -32,11 +32,10 @@ var request = require('request'),
     stream = require('stream');
 
 var tag =  { key: input.tag.split(':')[0], value: input.tag.split(':')[1]};
-var overpass = "http://overpass-api.de/api/interpreter?data=";
+var overpass = 'http://overpass-api.de/api/interpreter?data=';
 
 var collection = [],
-    osmcollection = [],
-    status = {};
+    osmcollection = [];
 var fc, osmfc;
 
 if (input.input.indexOf('http') !== -1) {
@@ -44,7 +43,7 @@ if (input.input.indexOf('http') !== -1) {
     var output = fs.createWriteStream('/tmp/ingester.csv');
     request(input.input).pipe(output);
     output.on('close', function () {
-        input.input="/tmp/ingester.csv";
+        input.input='/tmp/ingester.csv';
         getData();
     });
 } else getData();
@@ -72,7 +71,7 @@ function getData() {
                 latRow = parseFloat(line.split(',')[lat]);
             if (lonRow > -180 || lonRow < 180 || latRow > -85 || latRow < 85 || (lonRow !== 0 && latRow !== 0))
                 collection.push(turf.point([lonRow, latRow]));
-            else console.error("Invalid GEOM skipped");
+            else console.error('Invalid GEOM skipped');
         }
     });
     rl.on('close', getOSM);
@@ -80,50 +79,49 @@ function getData() {
 
 function getOSM() {
     fc = turf.featurecollection(collection);
-    envelope = turf.envelope(fc);
+    var envelope = turf.envelope(fc);
     console.error('Creating tiles');
     var tiles = cover.geojson(envelope.geometry, { min_zoom: 7, max_zoom: 7 });
-    var urls = []
+    var urls = [];
 
-    async.each(tiles.features, function(feat, cb) {
+    async.each(tiles.features, function(feat) {
         var bbox = turf.extent(feat);
-        var query = overpass + encodeURIComponent("[out:json][timeout:10];(node[" + tag.key +  "=" + tag.value + "]("+bbox[1]+","+bbox[0]+","+bbox[3]+","+bbox[2]+"););out body;>;out skel qt;");
+        var query = overpass + encodeURIComponent('[out:json][timeout:10];(node[' + tag.key +  '=' + tag.value + ']('+bbox[1]+','+bbox[0]+','+bbox[3]+','+bbox[2]+'););out body;>;out skel qt;');
         urls.push(query);
-    })
+    });
     console.error('Number of requests: ' + urls.length);
     
+    var attempts = 0;
     function issueRequest(address, next) {
         console.error('issuing request for ' + address);
         request(address, function(err, res, body) {
             if (err || res.statusCode !== 200) {
-                console.log(body);
+                console.error(body);
                 console.error('Request failed...retrying');
-                attempts++
-                if (attempts < 6) { issueRequest() }
-                else { next() }
+                attempts++;
+                if (attempts < 6) issueRequest();
+                else next();
             } else {
                 console.error('request returned');
                 JSON.parse(body).elements.forEach(function(osmfeat) {
                     osmcollection.push(turf.point([osmfeat.lon, osmfeat.lat]));
-                })
+                });
                 attempts = 0;
-                next()
-            };
+                next();
+            }
         });
     }
     var q = require('queue-async')(1);
-    var tasks = [];
-    urls.forEach(function(t){ q.defer(issueRequest, t) });
+    urls.forEach(function(t) { q.defer(issueRequest, t); });
     q.await(diff);
-
 }
 
 function diff() {
     osmfc = turf.featurecollection(osmcollection);
-    console.log("LON,LAT");
+    console.log('LON,LAT');
     fc.features.forEach(function(pt) {
         var nearest = turf.nearest(pt, osmfc);
-        if (turf.distance(pt, nearest, "kilometers") > input.tol)
+        if (turf.distance(pt, nearest, 'kilometers') > input.tol)
             console.log(pt.geometry.coordinates.join(','));
     });
 }
