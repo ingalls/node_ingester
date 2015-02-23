@@ -107,7 +107,7 @@ function getOSM() {
                     osmcollection.push(turf.point([osmfeat.lon, osmfeat.lat]));
                 });
                 attempts = 0;
-                next();
+                setTimeout(next, 200)
             }
         });
     }
